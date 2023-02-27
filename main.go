@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net"
@@ -8,19 +9,18 @@ import (
 )
 
 func main() {
-	const (
-		tcpPort = 9090
-		udpPort = 9091
-	)
+	tcpPort := flag.Int("tcp", 80, "tcp port to listen")
+	udpPort := flag.Int("udp", 3000, "udp port to listen")
+	flag.Parse()
 
 	errChan := make(chan error)
 
 	go func() {
-		errChan <- startTcp(tcpPort)
+		errChan <- startTcp(*tcpPort)
 	}()
 
 	go func() {
-		errChan <- startUdp(udpPort)
+		errChan <- startUdp(*udpPort)
 	}()
 
 	log.Fatalf("server error: %s", <-errChan)
@@ -35,7 +35,7 @@ func startUdp(port int) error {
 	}
 	defer listener.Close()
 
-	log.Println(network, "server ready and listening")
+	log.Println(network, "server ready and listening on port", port)
 
 	for {
 		buff := make([]byte, 1<<7)
@@ -60,7 +60,7 @@ func startTcp(port int) error {
 	}
 	defer listener.Close()
 
-	log.Println(network, "server ready and listening")
+	log.Println(network, "server ready and listening on port", port)
 
 	for {
 		conn, err := listener.Accept()
